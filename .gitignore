@@ -1,0 +1,8 @@
+# Auth Environment Variables
+.env
+
+# Python Virtual Environment
+env/
+
+# Keep API Cache
+state
