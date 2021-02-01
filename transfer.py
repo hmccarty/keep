@@ -1,29 +1,32 @@
 import gkeepapi
-import keyring
 import os 
+import sys
 from decouple import config
 
 if __name__ == '__main__':
+    gkeepapi.node.DEBUG = True
     keep = gkeepapi.Keep()
 
-    if os.path.exists('state'):
-        with open('state', 'r') as f:
-            state = json.load(f)
-    else:
-        state = None
+    fromAcc = sys.argv[1]
+    fromPass = sys.argv[2]
 
-    gmail = config('GMAIL')
-    try:
-        token = keyring.get_password('google-keep-token', config('GMAIL'))
-    except keyring.errors.NoKeyringError:
-        token = None
+    toAcc = config('GMAIL')
+    toPass = config('PWORD')
 
-    if token is None:
-        keep.login(gmail, config('PWORD'), state=state)
-        token = keep.getMasterToken()
-        kering.set_password('google-keep-token', config('GMAIL'), token)
-    else:
-        keep.resume(gmail, token, state=state)
+    keep.login(fromAcc, fromPass)
+    gnotes = keep.all()
+    keep.login(toAcc, toPass)
+
+    tmpLabel = keep.findLabel('tmp')
+    if tmpLabel is None: 
+        tmpLabel = keep.createLabel('tmp')
+    for gnote in gnotes:
+        note = keep.createNote(gnote.title, gnote.text)
+        note.labels = gnote.labels
+        note.labels.add(tmpLabel)
+        break
+
     keep.sync()
 
-    print(keep.all())
+
+
