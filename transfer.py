@@ -21,10 +21,21 @@ if __name__ == '__main__':
     if tmpLabel is None: 
         tmpLabel = keep.createLabel('tmp')
     for gnote in gnotes:
-        note = keep.createNote(gnote.title, gnote.text)
-        note.labels = gnote.labels
-        note.labels.add(tmpLabel)
-        break
+        if gnote.title == '' and gnote.text == '':
+            continue
+        try:
+            items = map(lambda x: (x.text, x.checked), gnote.items)
+            note = keep.createList(gnote.title, items)
+        except AttributeError:
+            note = keep.createNote(gnote.title, gnote.text)
+        finally:
+            for glabel in gnote.labels.all():
+                label = keep.findLabel(glabel.name)
+                if label is None:
+                    label = keep.createLabel(glabel.name)
+                note.labels.add(label)
+                
+            note.labels.add(tmpLabel)
 
     keep.sync()
 
